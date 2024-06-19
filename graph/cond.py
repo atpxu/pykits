@@ -43,10 +43,15 @@ class Condition:
         }
 
     @staticmethod
-    def load(cond):
+    def load(cond: dict):
         if 'func' in cond and isinstance(cond['func'], str):
             try:
                 cond['func'] = globals()[cond['func']]
             except KeyError:
                 cond['func'] = opname_funcs[cond['func']]
-        return Condition(**cond)
+        return Condition(
+            name=cond['name'],
+            val=cond.get('val'),
+            func=cond.get('func', operator.eq),
+            val2=cond.get('val2')
+        )
