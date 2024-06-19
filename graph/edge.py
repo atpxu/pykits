@@ -5,28 +5,38 @@ from .cond import Condition
 
 class Edge:
     """
-    Edge is a connection between two nodes.
+    Edge is a connection between two nodes in the graph.
     This parent class implements the basic methods for an edge.
-    And it ends with no next node.
+    And it ends with no node to connect.
     """
+    from .node import Node  # Avoid circular import
 
-    def get_nodes(self):
+    def get_nodes(self) -> list[Node]:
+        """
+        Get a list of nodes connected by this edge.
+        :return:
+        """
         return []
 
     def run(self, storage):
+        """Run the task inside the node and then goto the edge"""
         pass
 
     async def arun(self, storage):
+        """Async version of run()"""
         pass
 
-    def dump(self):
+    def dump(self) -> dict:
+        """Dump to a dict for serialization"""
         return {'type': self.__class__.__name__}
 
-    def fill(self, edge_data: dict, node_dict: dict):
+    def fill(self, edge_data: dict, node_dict: dict) -> None:
+        """Fill edge data and corresponding node data into the edge object."""
         pass
 
     @staticmethod
     def load(edge_data: dict, node_dict: dict):
+        """Load an edge from a dict as deserialization."""
         type_ = edge_data.get('type')
         edge = globals()[type_]()
         edge.fill(edge_data, node_dict)
@@ -34,9 +44,16 @@ class Edge:
 
 
 class SimpleEdge(Edge):
+    """
+    SimpleEdge is a direct connection between two nodes.
+    """
     from .node import Node
 
     def __init__(self, next_node: Node = None):
+        """
+
+        :param next_node: the node connected by this edge
+        """
         super().__init__()
         self.next_node = next_node
 
@@ -62,6 +79,9 @@ class SimpleEdge(Edge):
 
 
 class IfElseEdge(Edge):
+    """
+    IfElseEdge is a connection with multiple conditions.
+    """
     from .node import Node
 
     def __init__(
@@ -69,6 +89,12 @@ class IfElseEdge(Edge):
             is_and: bool = True,
             true_node: Node = None,
             false_node: Node = None):
+        """
+        :param conditions: a list of conditions
+        :param is_and: if True, all conditions should be satisfied, otherwise, any one of them is enough
+        :param true_node: the node to run when conditions are satisfied
+        :param false_node: the node to run when conditions are not satisfied
+        """
         super().__init__()
         self.conditions = conditions
         self.is_and = is_and
@@ -123,6 +149,10 @@ class IfElseEdge(Edge):
 
 
 class RouteEdge(Edge):
+    """
+    RouteEdge is a connection with multiple routes. Each route has a condition to satisfy.
+    If none of the conditions is satisfied, the default node will be run.
+    """
     from .node import Node
 
     def __init__(self, routes: Sequence[tuple[Condition, Node]], default_node: Node = None):
