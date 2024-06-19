@@ -1,88 +1,161 @@
+from typing import Sequence
+
+from .cond import Condition
 
 
 class Edge:
-    def __init__(self):
-        self.next_node = None
+    """
+    Edge is a connection between two nodes.
+    This parent class implements the basic methods for an edge.
+    And it ends with no next node.
+    """
 
-    def run(self, data):
+    def get_nodes(self):
+        return []
+
+    def run(self, storage):
         pass
 
-    def to_dict(self):
-        return {
-            'type': self.__class__.__name__,
-            'next_node': self.next_node.to_dict() if self.next_node else None
-        }
+    async def arun(self, storage):
+        pass
+
+    def dump(self):
+        return {'type': self.__class__.__name__}
+
+    def fill(self, edge_data: dict, node_dict: dict):
+        pass
 
     @staticmethod
-    def from_dict(edge_dict):
-        edge_type = edge_dict['type']
-        edge = globals()[edge_type]()
-        edge.next_node = Node.from_dict(edge_dict['next_node']) if edge_dict['next_node'] else None
+    def load(edge_data: dict, node_dict: dict):
+        type_ = edge_data.get('type')
+        edge = globals()[type_]()
+        edge.fill(edge_data, node_dict)
         return edge
 
 
 class SimpleEdge(Edge):
-    def run(self, data):
-        if self.next_node:
-            self.next_node.run(data)
+    from .node import Node
+
+    def __init__(self, next_node: Node = None):
+        super().__init__()
+        self.next_node = next_node
+
+    def get_nodes(self):
+        return [self.next_node]
+
+    def run(self, storage):
+        if self.next_node is not None:
+            return self.next_node.run(storage)
+
+    async def arun(self, storage):
+        if self.next_node is not None:
+            return await self.next_node.arun(storage)
+
+    def dump(self):
+        return {
+            'type': self.__class__.__name__,
+            'node_idx': self.next_node.idx if self.next_node else None
+        }
+
+    def fill(self, edge_data: dict, node_dict: dict):
+        self.next_node = node_dict.get(edge_data.get('node_idx'))
 
 
 class IfElseEdge(Edge):
-    def __init__(self, condition):
-        super().__init__()
-        self.condition = condition
-        self.true_node = None
-        self.false_node = None
+    from .node import Node
 
-    def run(self, data):
-        if self.condition.evaluate(data):
+    def __init__(
+            self, conditions: Sequence[Condition] = (),
+            is_and: bool = True,
+            true_node: Node = None,
+            false_node: Node = None):
+        super().__init__()
+        self.conditions = conditions
+        self.is_and = is_and
+        self.true_node = true_node
+        self.false_node = false_node
+
+    def get_nodes(self):
+        return [self.true_node, self.false_node]
+
+    def satisfy_all(self, storage):
+        if self.is_and:
+            for cond in self.conditions:
+                if not cond.satisfy(storage):
+                    return False
+            return True
+        else:
+            for cond in self.conditions:
+                if cond.satisfy(storage):
+                    return True
+            return False
+
+    def run(self, storage):
+        if self.satisfy_all(storage):
             if self.true_node:
-                self.true_node.run(data)
+                self.true_node.run(storage)
         else:
             if self.false_node:
-                self.false_node.run(data)
+                self.false_node.run(storage)
 
-    def to_dict(self):
+    async def arun(self, storage):
+        if self.satisfy_all(storage):
+            if self.true_node:
+                await self.true_node.arun(storage)
+        else:
+            if self.false_node:
+                await self.false_node.arun(storage)
+
+    def dump(self):
         return {
             'type': self.__class__.__name__,
-            'condition': self.condition.to_dict(),
-            'true_node': self.true_node.to_dict() if self.true_node else None,
-            'false_node': self.false_node.to_dict() if self.false_node else None
+            'conditions': [cond.dump() for cond in self.conditions],
+            'is_and': self.is_and,
+            'true_idx': self.true_node.idx if self.true_node else None,
+            'false_idx': self.false_node.idx if self.false_node else None
         }
 
-    @staticmethod
-    def from_dict(edge_dict):
-        condition = Condition.from_dict(edge_dict['condition'])
-        edge = IfElseEdge(condition)
-        edge.true_node = Node.from_dict(edge_dict['true_node']) if edge_dict['true_node'] else None
-        edge.false_node = Node.from_dict(edge_dict['false_node']) if edge_dict['false_node'] else None
-        return edge
+    def fill(self, edge_data: dict, node_dict: dict):
+        self.conditions = [Condition.load(x) for x in edge_data.get('conditions')]
+        self.is_and = edge_data.get('is_and', True)
+        self.true_node = node_dict.get(edge_data.get('true_idx'))
+        self.false_node = node_dict.get(edge_data.get('false_idx'))
 
 
 class RouteEdge(Edge):
-    def __init__(self, conditions):
+    from .node import Node
+
+    def __init__(self, routes: Sequence[tuple[Condition, Node]], default_node: Node = None):
         super().__init__()
-        self.conditions = conditions  # List of (Condition, Node) pairs
-        self.default_node = None
+        self.routes = routes  # List of (Condition, Node) pairs
+        self.default_node = default_node
+
+    def get_nodes(self):
+        return [node for _, node in self.routes] + [self.default_node]
 
     def run(self, data):
-        for condition, node in self.conditions:
-            if condition.evaluate(data):
-                node.run(data)
-                return
+        for condition, node in self.routes:
+            if condition.satisfy(data):
+                return node.run(data)
         if self.default_node:
-            self.default_node.run(data)
+            return self.default_node.run(data)
 
-    def to_dict(self):
+    async def arun(self, data):
+        for condition, node in self.routes:
+            if condition.satisfy(data):
+                return await node.arun(data)
+        if self.default_node:
+            return await self.default_node.arun(data)
+
+    def dump(self):
         return {
             'type': self.__class__.__name__,
-            'conditions': [(cond.to_dict(), node.to_dict()) for cond, node in self.conditions],
-            'default_node': self.default_node.to_dict() if self.default_node else None
+            'routes': [(cond.dump(), node.idx) for cond, node in self.routes],
+            'default_node': self.default_node.idx if self.default_node else None
         }
 
-    @staticmethod
-    def from_dict(edge_dict):
-        conditions = [(Condition.from_dict(cond), Node.from_dict(node)) for cond, node in edge_dict['conditions']]
-        edge = RouteEdge(conditions)
-        edge.default_node = Node.from_dict(edge_dict['default_node']) if edge_dict['default_node'] else None
-        return edge
+    def fill(self, edge_data: dict, node_dict: dict):
+        self.routes = [
+            (Condition.load(cond), node_dict[node_idx])
+            for cond, node_idx in edge_data.get('routes')]
+        self.default_node = node_dict.get(edge_data.get('default_node'))
