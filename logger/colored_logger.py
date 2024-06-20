@@ -2,9 +2,16 @@
 # coding=utf-8
 
 import logging
+import os
 from types import MethodType
 
 from .formatter import ColoredFormatter, HTMLFormatter
+
+
+def create_directory(filename: str):
+    dirname = os.path.dirname(os.path.abspath(filename))
+    if dirname and not os.path.exists(dirname):
+        os.makedirs(dirname)
 
 
 class ColoredLogger(logging.Logger):
@@ -47,11 +54,13 @@ class ColoredLogger(logging.Logger):
                 logger.addHandler(ch)
 
             if filename:
+                create_directory(filename)
                 fh = logging.FileHandler(filename)
                 fh.setFormatter(ColoredFormatter(module_name=module_name))
                 logger.addHandler(fh)
 
             if html:
+                create_directory(html)
                 hh = logging.FileHandler(html)
                 hh.setFormatter(HTMLFormatter(module_name=module_name))
                 logger.addHandler(hh)
