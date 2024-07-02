@@ -9,6 +9,15 @@ from .formatter import ColoredFormatter, HTMLFormatter
 
 
 def create_directory(filename: str):
+    """
+        Create a directory based on the path of the given file name.
+
+        Args:
+            filename (str): The name of the file.
+
+        Returns:
+            None
+        """
     dirname = os.path.dirname(os.path.abspath(filename))
     if dirname and not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -39,6 +48,27 @@ class ColoredLogger(logging.Logger):
             console: bool = True,
             filename: str | None = None,
             html: str | None = None) -> logging.Logger:
+        """
+        Get a 'ColoredLogger' instance with configured handlers and formatters.
+
+        This static method configures a logger with the specified name and level (DEBUG). It sets up three handlers:
+        a console handler if 'console' is True, a file handler if 'filename' is provided, and an HTML file handler if
+        'html' is provided. Each handler is configured with a 'ColoredFormatter' or 'HTMLFormatter' instance.
+
+        Args:
+            name (str): The name of the logger.
+            module_name (str, optional): The name of the module, which will be included in the log records.
+            console (bool, optional): Whether to enable the console handler. Default is True.
+            filename (str, optional): The name of the log file. If specified, a file handler will be created.
+            html (str, optional): The name of the HTML file. If specified, an HTML file handler will be created.
+
+        Returns:
+            logging.Logger: A configured 'ColoredLogger' instance.
+
+        If the logger already exists when calling this method, it checks whether it is an instance of 'ColoredLogger'.
+        If not, the 'ystem' and 'notice' methods will be bound to the existing logger object to ensure it has the
+        extended functionality of these methods.
+        """
         logging.setLoggerClass(ColoredLogger)
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
