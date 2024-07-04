@@ -104,6 +104,15 @@ def get_logger(
         console: bool = True,
         filename: str | None = None,
         html: str | None = None) -> logging.Logger | ColoredLogger:
+    """
+    Get a 'ColoredLogger' instance with configured handlers and formatters.
+    :param name:  The name of the logger.
+    :param module_name: The name of the module, which will be included in the log records.
+    :param console: whether print to console
+    :param filename: save plain log to this file
+    :param html: save html log to this file
+    :return:
+    """
     return ColoredLogger.get_logger(
         name=name, module_name=module_name,
         console=console, filename=filename, html=html)
