@@ -1,15 +1,17 @@
 import operator
 from typing import Any, Callable
 
-opfunc_names = {
-    func: name
-    for name, func in vars(operator).items()
-    if callable(func) and not name.startswith('__')}
 
-opname_funcs = {
-    name: func
-    for name, func in vars(operator).items()
-    if callable(func) and not name.startswith('__')}
+class OperatorFunctions:
+    functions = {
+        name: func
+        for name, func in vars(operator).items()
+        if callable(func) and not name.startswith('__')}
+
+    function_names = {
+        func: name
+        for name, func in vars(operator).items()
+        if callable(func) and not name.startswith('__')}
 
 
 class Condition:
@@ -38,7 +40,7 @@ class Condition:
         return {
             'name': self.name,
             'val': self.default_value,
-            'func': self.func.__name__,
+            'func': self.func.__name__,  # = OperatorFunctions.function_names[self.func]
             'val2': self.target_value
         }
 
@@ -48,7 +50,7 @@ class Condition:
             try:
                 cond['func'] = globals()[cond['func']]
             except KeyError:
-                cond['func'] = opname_funcs[cond['func']]
+                cond['func'] = OperatorFunctions.functions[cond['func']]
         return Condition(
             name=cond['name'],
             val=cond.get('val'),
