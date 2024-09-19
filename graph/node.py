@@ -1,7 +1,11 @@
 from .edge import Edge
 from configurable.runnable import Runnable
 
+
 class Node(Runnable):
+    """
+    Node class
+    """
     def __init__(self, idx=-1, edge: Edge = None):
         self.idx = idx
         self.edge = edge
