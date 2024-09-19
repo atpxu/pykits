@@ -1,20 +1,25 @@
-from .edge import Edge
+from configurable.runconfig import RunnableConfigurable
 from configurable.runnable import Runnable
+from .edge import Edge
 
 
 class Node(Runnable):
     """
     Node class
     """
-    def __init__(self, idx=-1, edge: Edge = None):
+
+    def __init__(self, r: RunnableConfigurable, idx: int = -1, edge: Edge = None):
         self.idx = idx
+        self.item = r
         self.edge = edge
 
     def run(self, storage):
+        self.item.run(storage)
         if self.edge:
             return self.edge.run(storage)
 
     async def arun(self, storage):
+        await self.item.arun(storage)
         if self.edge:
             return await self.edge.arun(storage)
 
@@ -22,6 +27,7 @@ class Node(Runnable):
         return {
             'idx': self.idx,
             'type': self.__class__.__name__,
+            'item': self.item.dump(),
             'edge': self.edge.dump() if self.edge else None}
 
     def fill(self, node_dict):
