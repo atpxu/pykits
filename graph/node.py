@@ -5,7 +5,7 @@ from .edge import Edge
 
 class Node(Runnable):
     """
-    Node class
+    Node class for graph. Run the internal item and pass to next node through edge
     """
 
     def __init__(self, r: RunnableConfigurable, idx: int = -1, edge: Edge = None):
