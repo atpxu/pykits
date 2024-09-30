@@ -22,10 +22,11 @@ def get_raw_data(filename: str = 'time_stat.xlsx', sheet_name: str = '原始数�
     is_workday_weekend = df['date'].isin(workdays)
     df_filtered = df[~((is_weekend & ~is_workday_weekend) | is_holiday)]
     # 过滤过长的 duration
-    df_filtered = df_filtered[(df_filtered['end'] - df_filtered['start']) <= timedelta(hours=14)]
+    df_filtered = df_filtered[(df_filtered['end'] - df_filtered['start']) <= timedelta(hours=13)]
     # 过滤掉 start_time 在上午6点前的行
     morning_6_am = pd.to_datetime('06:00:00', format='%H:%M:%S').time()
-    return df_filtered[df_filtered['start'].dt.time >= morning_6_am]
+    night_23_pm = pd.to_datetime('23:00:00', format='%H:%M:%S').time()
+    return df_filtered[(df_filtered['start'].dt.time >= morning_6_am) & (df_filtered['end'].dt.time <= night_23_pm)]
 
 
 def calculate_status(row):
