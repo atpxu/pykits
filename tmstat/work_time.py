@@ -73,7 +73,7 @@ def write_single_day_summary(
     if isinstance(filename, str) and filename.endswith('.xlsx'):
         with pd.ExcelWriter(filename, mode='w') as writer:  # 这里用mode='a'表示追加
             grouped.to_excel(writer, sheet_name=sheet_name, index=False)
-        print(f"过滤后的统计已生成在{filename}的{sheet_name}中。")
+        print(f"过滤后的日期汇总统计已生成在{filename}的{sheet_name}中。")
     return grouped
 
 
@@ -100,8 +100,8 @@ def write_total_summary(grouped: pd.DataFrame, filename: str = 'total_stat.xlsx'
     result['ok_ratio'] = ((result['full_days'] + result['over_days']) / (
             result['total_days'] - result['half_days']))  # full+over天数占比%
     # 将统计结果写入新的 Excel 文件
-    if isinstance(filename, str) and filename.startswith('.xlsx'):
+    if isinstance(filename, str) and filename.endswith('.xlsx'):
         with pd.ExcelWriter(filename, mode='w') as writer:
             result.to_excel(writer, sheet_name=sheet_name, index=True)
-        print(f"统计结果已生成并保存到{filename}的{sheet_name}中。")
+        print(f"最终统计结果已生成并保存到{filename}的{sheet_name}中。")
     return result
