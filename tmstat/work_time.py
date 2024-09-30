@@ -83,6 +83,7 @@ def write_total_summary(grouped: pd.DataFrame, filename: str = 'total_stat.xlsx'
     result = grouped.groupby('name').agg(
         total_days=('date', 'nunique'),  # 每个name的唯一工作日数
         half_days=('status', lambda x: (x == 'half').sum()),  # half的天数
+        valid_days=('status', lambda x: (x != 'half').sum()),  # valid_days
         lack_days=('status', lambda x: (x == 'lack').sum()),  # lack的天数
         near_days=('status', lambda x: (x == 'near').sum()),  # lack的天数
         full_days=('status', lambda x: (x == 'full').sum()),  # full的天数
