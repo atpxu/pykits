@@ -6,7 +6,7 @@ holidays = ['2024-09-16', '2024-09-17']  # 这是休假日期
 workdays = ['2023-09-14', '2024-09-29']  # 这是调休上班的日期
 holidays = [pd.to_datetime(date) for date in holidays]
 workdays = [pd.to_datetime(date) for date in workdays]
-day0 = datetime.strptime('2024-09-01', '%Y-%m-%d')
+# day0 = datetime.strptime('2024-09-01', '%Y-%m-%d')
 
 
 def get_raw_data(filename: str = 'time_stat.xlsx', sheet_name: str = '原始数据-all'):
@@ -24,33 +24,33 @@ def get_raw_data(filename: str = 'time_stat.xlsx', sheet_name: str = '原始数�
     # 过滤过长的 duration
     df_filtered = df_filtered[(df_filtered['end'] - df_filtered['start']) <= timedelta(hours=13)]
     # 过滤掉 start_time 在上午6点前的行
-    morning_6_am = pd.to_datetime('06:00:00', format='%H:%M:%S').time()
+    morning_7_am = pd.to_datetime('07:00:00', format='%H:%M:%S').time()
     night_23_pm = pd.to_datetime('23:00:00', format='%H:%M:%S').time()
-    return df_filtered[(df_filtered['start'].dt.time >= morning_6_am) & (df_filtered['end'].dt.time <= night_23_pm)]
+    return df_filtered[(df_filtered['start'].dt.time >= morning_7_am) & (df_filtered['end'].dt.time <= night_23_pm)]
 
 
 def calculate_status(row):
     duration_hours = row['duration'] / 3600  # 将秒转换为小时
     if duration_hours < 6:
         return "half"
-    elif row['date'] < day0:
-        if duration_hours < 8.5:
-            return "lack"
-        elif duration_hours < 9:
-            return "near"
-        elif duration_hours >= 10:
-            return "over"
-        else:
-            return "full"
+    # elif row['date'] < day0:
+    #     if duration_hours < 8.5:
+    #         return "lack"
+    #     elif duration_hours < 9:
+    #         return "near"
+    #     elif duration_hours >= 10:
+    #         return "over"
+    #     else:
+    #         return "full"
+    # else:
+    if duration_hours < 9:
+        return "lack"
+    elif duration_hours < 10:
+        return "near"
+    elif duration_hours >= 11:
+        return "over"
     else:
-        if duration_hours < 9.5:
-            return "lack"
-        elif duration_hours < 10:
-            return "near"
-        elif duration_hours >= 11:
-            return "over"
-        else:
-            return "full"
+        return "full"
 
 
 def write_single_day_summary(
@@ -92,7 +92,7 @@ def write_total_summary(grouped: pd.DataFrame, filename: str = 'total_stat.xlsx'
     # 过滤掉 half_days 以外的状态来计算 lack、full、over 的平均时长
     filtered = grouped[grouped['status'].isin(['lack', 'full', 'over'])]
     # 计算每个name的lack、full、over的平均工作时长（秒）
-    avg_duration = filtered.groupby('name')['duration'].mean()
+    avg_duration = filtered.groupby('name')['duration'].mean().round()
     result['avg_dur'] = avg_duration
     # 将秒数转化为 时:分:秒
     result['avg_hms'] = avg_duration.apply(lambda x: str(timedelta(seconds=x)))
