@@ -2,8 +2,10 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-holidays = ['2024-09-16', '2024-09-17']  # 这是休假日期
-workdays = ['2023-09-14', '2024-09-29']  # 这是调休上班的日期
+holidays = [
+    '2025-01-01', '2025-01-28', '2025-01-29', '2025-01-29', '2025-01-30',
+    '2025-01-31', '2025-02-01', '2025-02-02', '2025-02-03', '2025-02-04']  # 这是休假日期
+workdays = ['2025-01-26', '2025-02-08']  # 这是调休上班的日期
 holidays = [pd.to_datetime(date) for date in holidays]
 workdays = [pd.to_datetime(date) for date in workdays]
 # day0 = datetime.strptime('2024-09-01', '%Y-%m-%d')

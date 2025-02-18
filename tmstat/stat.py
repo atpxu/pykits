@@ -4,7 +4,7 @@ import work_time
 
 
 def main():
-    parser = argparse.ArgumentParser(description='统计工时')
+    parser = argparse.ArgumentParser(description='统计工时，原始数据表中需要包含name/date/start/end列')
     parser.add_argument(
         '-i', '--input', type=str, help='原始数据明细文件名称')
     parser.add_argument(
