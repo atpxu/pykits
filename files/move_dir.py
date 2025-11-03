@@ -16,7 +16,7 @@ TXT_SUFFIXES = {
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        prog="move_file.py",
+        prog="move_dir.py",
         description=(
             "按条件匹配并移动文件（默认仅打印 mv 命令；加 -a/--action 才执行）。\n"
             "匹配类型：\n"
