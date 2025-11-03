@@ -32,14 +32,18 @@ def parse_args():
     parser.add_argument("-s", "--source", required=True, help="源目录 SRC_DIR")
     parser.add_argument("-t", "--target", required=True, help="目标目录 TRG_DIR")
     parser.add_argument("-r", "--recursive", action="store_true", help="递归遍历源目录")
-    parser.add_argument("-m", "--match", required=True,
+    parser.add_argument(
+        "-m", "--match", required=True,
         choices=["len", "str", "type", "subfix"],
         help="匹配类型：len/str/type/subfix")
-    parser.add_argument("-v", "--value", required=True,
+    parser.add_argument(
+        "-v", "--value", required=True,
         help="匹配值：len=整数；str=子串；subfix=后缀；type=img|txt")
-    parser.add_argument("-a", "--action", action="store_true",
+    parser.add_argument(
+        "-a", "--action", action="store_true",
         help="执行移动（默认仅打印命令）")
-    parser.add_argument("--on-exist", choices=["skip", "rename", "overwrite"],
+    parser.add_argument(
+        "-p", "--on-exist-policy", choices=["skip", "rename", "overwrite"],
         default="skip",
         help="目标已存在时的处理策略：skip(跳过, 默认)/rename(自动重命名)/overwrite(覆盖)")
 
