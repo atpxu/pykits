@@ -39,6 +39,9 @@ def parse_args():
         help="匹配值：len=整数；str=子串；subfix=后缀；type=img|txt")
     parser.add_argument("-a", "--action", action="store_true",
         help="执行移动（默认仅打印命令）")
+    parser.add_argument("--on-exist", choices=["skip", "rename", "overwrite"],
+        default="skip",
+        help="目标已存在时的处理策略：skip(跳过, 默认)/rename(自动重命名)/overwrite(覆盖)")
 
     return parser.parse_args()
 
@@ -108,6 +111,30 @@ def iter_files(src: str, recursive: bool):
                 yield src, f
 
 
+def resolve_conflict(tgt_dir: str, fname: str, policy: str) -> str | None:
+    """根据 on-exist 策略生成目标路径。若跳过则返回 None。"""
+    dst_path = os.path.join(tgt_dir, fname)
+
+    if not os.path.exists(dst_path):
+        return dst_path
+
+    if policy == "skip":
+        print(f"[SKIP] 已存在: {dst_path}")
+        return None
+    elif policy == "rename":
+        stem, ext = os.path.splitext(fname)
+        i = 1
+        while True:
+            new_name = f"{stem}_{i}{ext}"
+            dst_path = os.path.join(tgt_dir, new_name)
+            if not os.path.exists(dst_path):
+                return dst_path
+            i += 1
+    elif policy == "overwrite":
+        return dst_path
+    return None
+
+
 def main():
     args = parse_args()
     src = os.path.abspath(args.source)
@@ -133,14 +160,13 @@ def main():
             continue
 
         selected += 1
-        if args.recursive:
-            rel_dir = os.path.relpath(root, src)
-            tgt_dir = dst if rel_dir == "." else os.path.join(dst, rel_dir)
-        else:
-            tgt_dir = dst
-
+        rel_dir = os.path.relpath(root, src) if args.recursive else "."
+        tgt_dir = dst if rel_dir == "." else os.path.join(dst, rel_dir)
         os.makedirs(tgt_dir, exist_ok=True)
-        dst_path = os.path.join(tgt_dir, fname)
+
+        dst_path = resolve_conflict(tgt_dir, fname, args.on_exist)
+        if dst_path is None:
+            continue
 
         print(f"mv '{src_path}' '{dst_path}'")
         if args.action:
