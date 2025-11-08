@@ -168,7 +168,7 @@ def main():
         tgt_dir = dst if rel_dir == "." else os.path.join(dst, rel_dir)
         os.makedirs(tgt_dir, exist_ok=True)
 
-        dst_path = resolve_conflict(tgt_dir, fname, args.on_exist)
+        dst_path = resolve_conflict(tgt_dir, fname, args.on_exist_policy)
         if dst_path is None:
             continue
 
